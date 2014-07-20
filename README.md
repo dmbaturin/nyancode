@@ -38,7 +38,7 @@ nyaaan nyan nyaan nyaan nyaaan
 You need NekoVM (http://nekovm.org) and Ocaml compiler.
 
 1. Build nyanc: ocamlc -o nyanc str.cma ./nyanc.ml
-2. Build the chr moduke: nekoc ./chr.neko
+2. Build the chr module: nekoc ./chr.neko
 3. Build your program: ./nyanc ./file.nyan > file.neko
 4. Build generated NekoVM source: nekoc ./file.neko
 5. Run it: neko ./file.n
