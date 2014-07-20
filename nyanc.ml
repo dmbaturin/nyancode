@@ -1,17 +1,15 @@
-(* NekoVM arrays are immutable. Think about it,
-   immutable arrays. String are mutable though,
-   so we'll use a string instead and initialize it
-   with zeroes. *)
 let prologue = "\
-var c = $loader.loadmodule(\"chr\",$loader);
-var a = $smake(9999);\n\
+file_read_char = $loader.loadprim(\"std@file_read_char\",1);\n\
+file_stdin = $loader.loadprim(\"std@file_stdin\",0);\n\
+tape = $amake(9999);\n\
 var i = 0;\n\
 while(i<=9999) {\n\
-    $sset(a,i,0);\n\
+    tape[i] = 0;\n\
     i ++=1;\n\
 }\n\
 ptr = 0;\n\
 value = 0;\n\
+output = $smake(1);
 "
 ;;
 
@@ -53,18 +51,15 @@ let rec check_nesting_level ?(level=0) source =
     | hd :: tl -> check_nesting_level tl ~level:(update_nesting_level hd level)
 ;;
 
-(* NekoVM docs mention sys_getch() function, but I couldn't get it
-   to work. If anyone knows the right incantation, please tell,
-   right now "," is nop here.*)
 let translate_token token =
     match token with
     | "nyan"    -> "ptr ++= 1;"
     | "Nyan"    -> "ptr --= 1;"
-    | "nyaan"   -> "value=$sget(a,ptr); value ++=1; $sset(a,ptr,value); value=0;"
-    | "Nyaan"   -> "value=$sget(a,ptr); value --=1; $sset(a,ptr,value); value=0;"
-    | "nyaaan"  -> "$print(c.chr($sget(a,ptr)));"
-    | "Nyaaan"  -> ""
-    | "nyaaaan" -> "while ($sget(a,ptr) > 0) {"
+    | "nyaan"   -> "tape[ptr] += 1;"
+    | "Nyaan"   -> "tape[ptr] -= 1;"
+    | "nyaaan"  -> "$sset(output,0,tape[ptr]); $print(output);"
+    | "Nyaaan"  -> "try tape[ptr] = file_read_char(file_stdin()) catch e 0; ;"
+    | "nyaaaan" -> "while (tape[ptr] > 0) {"
     | "Nyaaaan" -> "}"
     | _         -> ""
 ;;
