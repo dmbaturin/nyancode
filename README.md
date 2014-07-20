@@ -38,16 +38,6 @@ nyaaan nyan nyaan nyaan nyaaan
 You need NekoVM (http://nekovm.org) and Ocaml compiler.
 
 1. Build nyanc: ocamlc -o nyanc str.cma ./nyanc.ml
-2. Build the chr module: nekoc ./chr.neko
 3. Build your program: ./nyanc ./file.nyan > file.neko
 4. Build generated NekoVM source: nekoc ./file.neko
 5. Run it: neko ./file.n
-
-# Limitations
-
-NekoVM lacks chr() function, or it's buried to deep somewhere,
-so Nyancode uses an incomplete implementation, some non-printable
-characters are displayed as space.
-
-NekoVM docs mention it has a function for reading from stdin,
-but I couldn't get it to work, so "Nyaaan"/"," does nothing.
