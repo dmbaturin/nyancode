@@ -53,8 +53,8 @@ let rec check_nesting_level ?(level=0) source =
 
 let translate_token token =
     match token with
-    | "nyan"    -> "ptr ++= 1;"
-    | "Nyan"    -> "ptr --= 1;"
+    | "nyan"    -> "ptr += 1;"
+    | "Nyan"    -> "ptr -= 1;"
     | "nyaan"   -> "tape[ptr] += 1;"
     | "Nyaan"   -> "tape[ptr] -= 1;"
     | "nyaaan"  -> "$sset(output,0,tape[ptr]); $print(output);"
@@ -67,7 +67,7 @@ let translate_token token =
 let rec translate source =
     match source with
     | [] -> []
-    | head :: tail -> translate_token head :: translate tail
+    | hd :: tl -> translate_token hd :: translate tl
 ;;
 
 
