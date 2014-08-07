@@ -13,13 +13,6 @@ output = $smake(1);
 "
 ;;
 
-(* Joins two lists *)
-let rec append_list l1 l2 = 
-    match l1 with
-    | [] -> l2
-    | head :: tail -> head :: (append_list tail l2)
-;;
-
 (* Read source and break it into tokens *)
 let read_source filename = 
     let tokens = ref [] in
@@ -28,7 +21,7 @@ let read_source filename =
         while true do
             let line = input_line chan in
             let line_tokens = Str.split (Str.regexp " ") line in 
-            tokens := append_list !tokens line_tokens
+            tokens := !tokens @ line_tokens
         done; []
     with End_of_file ->
       close_in chan;
