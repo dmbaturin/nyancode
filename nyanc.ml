@@ -1,3 +1,4 @@
+(* NekoVM program prologue prepended to all programs. *)
 let prologue = "\
 file_read_char = $loader.loadprim(\"std@file_read_char\",1);\n\
 file_stdin = $loader.loadprim(\"std@file_stdin\",0);\n\
@@ -11,7 +12,6 @@ ptr = 0;\n\
 value = 0;\n\
 output = $smake(1);
 "
-;;
 
 (* Read source and break it into tokens *)
 let read_source filename = 
@@ -26,7 +26,6 @@ let read_source filename =
     with End_of_file ->
       close_in chan;
     !tokens
-;;
 
 (* Nesting level checking stuff. We don't track positions here,
    just check if the number of left brackets equals the number
@@ -36,13 +35,11 @@ let update_nesting_level token level =
     | "nyaaaan" -> level + 1
     | "Nyaaaan" -> level - 1
     | _         -> level
-;;
 
 let rec check_nesting_level ?(level=0) source =
     match source with
     | [] -> level
     | hd :: tl -> check_nesting_level tl ~level:(update_nesting_level hd level)
-;;
 
 let translate_token token =
     match token with
@@ -55,19 +52,17 @@ let translate_token token =
     | "nyaaaan" -> "while (tape[ptr] > 0) {"
     | "Nyaaaan" -> "}"
     | _         -> ""
-;;
 
 let rec translate source =
     match source with
     | [] -> []
     | hd :: tl -> translate_token hd :: translate tl
-;;
 
-
-let source = read_source Sys.argv.(1) in
+let () =
+    let source = read_source Sys.argv.(1) in
     if check_nesting_level source > 0 then
         failwith "Unmatched bracket, nyan!";
+
     let translated_source = String.concat "\n" (translate source) in
-    let output = String.concat "" [prologue; translated_source] in
+    let output = prologue ^ translated_source in
     print_string output
-;;
