@@ -56,11 +56,19 @@ let translate_token token =
 let translate source =
     List.map translate_token source
 
-let () =
-    let source = read_source Sys.argv.(1) in
-    if check_nesting_level source > 0 then
-        failwith "Unmatched bracket, nyan!";
+let error msg =
+    print_endline msg;
+    exit 1
 
-    let translated_source = String.concat "\n" (translate source) in
-    let output = prologue ^ translated_source in
-    print_string output
+let () =
+    if (Array.length Sys.argv) <= 1 then error "Specify the file, nyan!"
+    else
+        begin
+            let source = read_source Sys.argv.(1) in
+            if check_nesting_level source > 0 then
+            error "Unmatched bracket, nyan!";
+
+            let translated_source = String.concat "\n" (translate source) in
+            let output = prologue ^ translated_source in
+            print_string output
+        end
