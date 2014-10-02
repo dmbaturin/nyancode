@@ -53,10 +53,8 @@ let translate_token token =
     | "Nyaaaan" -> "}"
     | _         -> ""
 
-let rec translate source =
-    match source with
-    | [] -> []
-    | hd :: tl -> translate_token hd :: translate tl
+let translate source =
+    List.map translate_token source
 
 let () =
     let source = read_source Sys.argv.(1) in
