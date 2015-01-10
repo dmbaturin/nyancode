@@ -1,3 +1,14 @@
+type nyan_op =
+    | VInc
+    | VDec
+    | PInc
+    | PDec
+    | VWrite
+    | VRead
+    | LoopStart
+    | LoopEnd
+    | Nop
+
 (* NekoVM program prologue prepended to all programs. *)
 let prologue = "\
 file_read_char = $loader.loadprim(\"std@file_read_char\",1);\n\
@@ -41,20 +52,35 @@ let rec check_nesting_level ?(level=0) source =
     | [] -> level
     | hd :: tl -> check_nesting_level tl ~level:(update_nesting_level hd level)
 
-let translate_token token =
-    match token with
-    | "nyan"    -> "ptr += 1;"
-    | "Nyan"    -> "ptr -= 1;"
-    | "nyaan"   -> "tape[ptr] += 1;"
-    | "Nyaan"   -> "tape[ptr] -= 1;"
-    | "nyaaan"  -> "$sset(output,0,tape[ptr]); $print(output);"
-    | "Nyaaan"  -> "try tape[ptr] = file_read_char(file_stdin()) catch e 0; ;"
-    | "nyaaaan" -> "while (tape[ptr] > 0) {"
-    | "Nyaaaan" -> "}"
+let neko_of_op op =
+    match op with
+    | PInc    -> "ptr += 1;"
+    | PDec    -> "ptr -= 1;"
+    | VInc   -> "tape[ptr] += 1;"
+    | VDec   -> "tape[ptr] -= 1;"
+    | VWrite  -> "$sset(output,0,tape[ptr]); $print(output);"
+    | VRead  -> "try tape[ptr] = file_read_char(file_stdin()) catch e 0; ;"
+    | LoopStart -> "while (tape[ptr] > 0) {"
+    | LoopEnd -> "}"
     | _         -> ""
 
-let translate source =
-    List.map translate_token source
+let op_of_token token =
+    match token with
+    | "nyan"    -> PInc
+    | "Nyan"    -> PDec
+    | "nyaan"   -> VInc
+    | "Nyaan"   -> VDec
+    | "nyaaan"  -> VWrite
+    | "Nyaaan"  -> VRead
+    | "nyaaaan" -> LoopStart
+    | "Nyaaaan" -> LoopEnd
+    | _         -> Nop
+
+let ops_of_tokens tokens =
+    List.map op_of_token tokens
+
+let neko_of_ops ops =
+    List.map neko_of_op ops
 
 let error msg =
     print_endline msg;
@@ -68,7 +94,8 @@ let () =
             if check_nesting_level source > 0 then
             error "Unmatched bracket, nyan!";
 
-            let translated_source = String.concat "\n" (translate source) in
+            let pseudo_ast = ops_of_tokens source in
+            let translated_source = String.concat "\n" (neko_of_ops pseudo_ast) in
             let output = prologue ^ translated_source in
             print_string output
         end
