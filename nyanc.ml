@@ -8,6 +8,10 @@ type nyan_op =
     | LoopStart
     | LoopEnd
     | Nop
+    | PIncMulti of int
+    | PDecMulti of int
+    | VIncMulti of int
+    | VDecMulti of int
 
 (* NekoVM program prologue prepended to all programs. *)
 let prologue = "\
@@ -48,6 +52,10 @@ let neko_of_op op =
     | VRead  -> "try tape[ptr] = file_read_char(file_stdin()) catch e 0; ;"
     | LoopStart -> "while (tape[ptr] > 0) {"
     | LoopEnd -> "}"
+    | PIncMulti x -> "ptr += " ^ (string_of_int x) ^ ";"
+    | PDecMulti x -> "ptr -= " ^ (string_of_int x) ^ ";"
+    | VIncMulti x -> "tape[ptr] += " ^ (string_of_int x) ^ ";"
+    | VDecMulti x -> "tape[ptr] -= " ^ (string_of_int x) ^ ";"
     | _         -> ""
 
 let op_of_token token =
@@ -74,6 +82,39 @@ let ops_of_tokens words =
 
 let neko_of_ops ops =
     List.map neko_of_op ops
+
+(* Replace sequences of some operation with
+   a single compound operation *)
+let replace_subsequence op make_op_fun ops =
+    let rec loop ops count acc =
+        match ops with
+        | [] -> acc
+        | [x] -> x :: acc
+        | x :: x' :: xs ->
+            if (x = x') && (x = op) then
+                (* We are inside a sequence *)
+                if xs = [] then
+                    (* ...but the end of the sequence is also the end
+                       of the list. Account for the two last items *)
+                    loop xs 0 ((make_op_fun (count + 2)) :: acc)
+                else
+                    (* There are more items *)
+                    loop (x' :: xs) (count + 1) acc
+            else
+                if count > 0 then
+                    (* We have just exited a sequence *)
+                    loop (x' :: xs) 0 ((make_op_fun (count + 1)) :: acc)
+                else
+                    (* We weren't even in a sequence *)
+                    loop (x' :: xs) 0 (x :: acc)
+    in List.rev (loop ops 0 [])
+
+let apply_optimizations ops =
+    replace_subsequence PInc (fun x -> PIncMulti x) ops |>
+    replace_subsequence PDec (fun x -> PDecMulti x)     |>
+    replace_subsequence VInc (fun x -> VIncMulti x)     |>
+    replace_subsequence VDec (fun x -> VDecMulti x)     |>
+    replace_subsequence VRead (fun x -> VRead)
 
 let error msg =
     print_endline msg;
@@ -102,7 +143,8 @@ let () =
             if check_nesting_level pseudo_ast > 0 then
             error "Unmatched bracket, nyan!";
 
-            let translated_source = String.concat "\n" (neko_of_ops pseudo_ast) in
+            let optimized = apply_optimizations pseudo_ast in
+            let translated_source = String.concat "\n" (neko_of_ops optimized) in
             let output = prologue ^ translated_source in
             print_string output
         end
