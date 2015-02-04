@@ -37,10 +37,12 @@ let update_nesting_level token level =
     | LoopEnd -> level - 1
     | _         -> level
 
-let rec check_nesting_level ?(level=0) source =
-    match source with
-    | [] -> level
-    | hd :: tl -> check_nesting_level tl ~level:(update_nesting_level hd level)
+let check_nesting_level ast =
+    let rec loop ast level =
+        match ast with
+        | [] -> level
+        | hd :: tl -> loop tl (update_nesting_level hd level)
+    in loop ast 0
 
 let neko_of_op op =
     match op with
