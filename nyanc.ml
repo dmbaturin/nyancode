@@ -1,17 +1,20 @@
 type nyan_op =
-    | VInc
-    | VDec
-    | PInc
-    | PDec
-    | VWrite
-    | VRead
-    | LoopStart
-    | LoopEnd
-    | Nop
-    | PIncMulti of int
-    | PDecMulti of int
-    | VIncMulti of int
-    | VDecMulti of int
+    | VInc              (* increment a cell value by one (+) *)
+    | VDec              (* decrement a cell value by one (-) *)
+    | PInc              (* increment the cell pointer value by one (>) *)
+    | PDec              (* decrement the cell pointer value by one (<) *)
+    | VWrite            (* print cell value (.) *)
+    | VRead             (* read a value into a cell (,) *)
+    | LoopStart         (* loop start ([) *)
+    | LoopEnd           (* loop end (]) *)
+    | Nop               (* anything but a valid keyword produces it *)
+
+    (* These ones don't occur in the source code and are produced only
+       by optimizations *)
+    | PIncMulti of int  (* increment a cell value by some number *)
+    | PDecMulti of int  (* decrement a cell value by some number *)
+    | VIncMulti of int  (* increment a cell pointer by some number *)
+    | VDecMulti of int  (* decrement the cell pointer by some number *)
 
 (* NekoVM program prologue prepended to all programs. *)
 let prologue = "\
