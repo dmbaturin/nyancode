@@ -114,8 +114,11 @@ let replace_subsequence op make_op_fun ops =
                     loop (x' :: xs) 0 (x :: acc)
     in List.rev (loop ops 0 [])
 
+let drop_nops ops = List.filter (fun x -> x <> Nop) ops
+
 let apply_optimizations ops =
-    replace_subsequence PInc (fun x -> PIncMulti x) ops |>
+    drop_nops ops                                       |>
+    replace_subsequence PInc (fun x -> PIncMulti x)     |>
     replace_subsequence PDec (fun x -> PDecMulti x)     |>
     replace_subsequence VInc (fun x -> VIncMulti x)     |>
     replace_subsequence VDec (fun x -> VDecMulti x)     |>
